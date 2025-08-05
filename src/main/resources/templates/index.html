@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tsinjo - Fonds d'urgence</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .transaction-list {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        .donation { color: green; }
+        .help { color: red; }
+        .verifying { opacity: 0.7; }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container py-5">
+    <!-- En-tête -->
+    <div class="text-center mb-5">
+        <h1 class="display-4">Tsinjo</h1>
+        <p class="lead">Fonds d'urgence solidaire</p>
+    </div>
+
+    <!-- Formulaire de don -->
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Faire un don</h5>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/donate}" th:object="${donationForm}" method="post">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email"
+                               th:field="*{email}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="fullName" class="form-label">Nom complet</label>
+                        <input type="text" class="form-control" id="fullName"
+                               th:field="*{fullName}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="amount" class="form-label">Montant (AR)</label>
+                        <input type="number" class="form-control" id="amount"
+                               th:field="*{amount}" min="100" step="100" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="paymentMethod" class="form-label">Moyen de paiement</label>
+                        <select class="form-select" id="paymentMethod"
+                                th:field="*{paymentMethod}" required>
+                            <option value="">Choisissez...</option>
+                            <option value="ORANGE_MONEY">Orange Money</option>
+                            <option value="MVOLA">Mvola</option>
+                            <option value="AIRTEL_MONEY">Airtel Money</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            Donner !
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Historique des transactions -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">Historique des transactions</h5>
+        </div>
+        <div class="card-body transaction-list">
+            <div th:if="${transactions.isEmpty()}" class="text-center py-3">
+                <p>Aucune transaction pour le moment</p>
+            </div>
+
+            <!-- Liste des transactions -->
+            <div th:each="tx : ${transactions}" class="mb-3 p-2 border-bottom">
+                <!--/*@thymesVar id="payment" type=""*/-->
+                <div th:if="${tx instanceof T(com.example.demo.model.Donation)}"
+                     class="donation" th:classappend="${tx.payment.status == T(com.example.demo.utils.PaymentStatus).VERIFYING} ? 'verifying'">
+                    <div class="d-flex justify-content-between">
+                            <span>
+                                <strong>+ <span th:text="${#numbers.formatCurrency(tx.payment.amount/100)}"></span></strong>
+                                (<span th:text="${tx.payment.status}"></span>,
+                                <span th:text="${tx.payment.pspType}"></span>)
+                            </span>
+                        <small th:text="${#temporals.format(tx.createdAt, 'dd/MM/yyyy HH:mm')}"></small>
+                    </div>
+                    <div>
+                        Par <span th:text="${tx.donor.fullName}"></span>
+                        (<span th:text="${tx.donor.email}"></span>)
+                    </div>
+                </div>
+
+                <!-- Aides -->
+                <div th:if="${tx instanceof T(com.example.demo.model.Help)}" class="help">
+                    <div class="d-flex justify-content-between">
+                            <span>
+                                <strong>- <span th:text="${#numbers.formatCurrency(tx.payment.amount/100)}"></span></strong>
+                            </span>
+                        <small th:text="${#temporals.format(tx.createdAt, 'dd/MM/yyyy HH:mm')}"></small>
+                    </div>
+                    <div>
+                        Pour <span th:text="${tx.beneficiary.fullName}"></span>
+                        (<span th:text="${tx.beneficiary.email}"></span>)
+                    </div>
+                    <div th:if="${tx.accidentDescription}" class="fst-italic mt-1">
+                        <span th:text="${tx.accidentDescription}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
